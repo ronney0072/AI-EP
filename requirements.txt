@@ -1,8 +1,0 @@
-fastapi
-joblib
-io
-uvicorn
-jinja2
-numpy
-pandas
-pathlib
