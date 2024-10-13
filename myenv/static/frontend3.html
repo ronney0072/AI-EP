@@ -219,7 +219,7 @@
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
 
-            const postResponse = await fetch('http://127.0.0.1:8000/features/predict', {
+            const postResponse = await fetch('/features/predict', {
                 method: 'POST',
                 body: formData
             });
