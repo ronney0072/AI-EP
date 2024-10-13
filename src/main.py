@@ -22,7 +22,7 @@ def index(req: Request):
     )
 
 # Path to the model
-model_path = Path("myenv/model/xgb_model_grid .joblib")
+model_path = Path("model/xgb_model_grid .joblib")
 model = joblib.load(model_path)
 
 @app.post("/features/predict")
