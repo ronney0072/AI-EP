@@ -11,9 +11,9 @@ from fastapi.templating import Jinja2Templates
 
 
 app = FastAPI()
-template = Jinja2Templates(directory="myenv/static/templates")
+template = Jinja2Templates(directory="static/templates")
 
-app.mount("/static", StaticFiles(directory="myenv/static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get('/', response_class=HTMLResponse)
 def index(req: Request):
     return template.TemplateResponse(
