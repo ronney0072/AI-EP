@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EP-AI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            margin: 0;
+            padding: 20px;
+            color: white;
+            text-align: left;
+             background-image: url('/static/images/background.jpg'); /* Add this */
+            background-size: cover; /* Make the image cover the entire page */
+            background-repeat: no-repeat; /* Prevent repeating the image */
+            background-position: center; /* Center the image */
+        }
+
+        h1, h2, h3 {
+            text-align: left;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        form {
+            margin-top: 20px;
+            text-align: center;
+            background-color: rgba(44, 62, 80, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-input {
+            margin: 20px 0;
+            padding: 10px 20px;
+            border: 2px solid white;
+            border-radius: 5px;
+            color: white;
+            background-color: black;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input:hover {
+            border-color: #3498db;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: black;
+            color: white;
+            border: 2px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        button:hover {
+            border-color: #3498db;
+        }
+
+        #csv-preview, #response-preview {
+            margin: 20px auto;
+            width: 50%;
+            border-collapse: collapse;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        #csv-preview td, #response-preview td {
+            padding: 5px;
+            border: 1px solid #ddd;
+            color: black;
+            font-size: 14px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .loading .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s infinite linear;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .icon {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Predictions on Kepler and TESS Satellite TCE Data</h1>
+    <!-- Introduction Section -->
+    <h2>Introduction</h2>
+    <p>Exoplanets are planets located outside our solar system. There are three main methods for detecting exoplanets: radial velocity method, direct imaging, and transit method.
+    The transit method, which involves detecting a dimming in a star's brightness as a planet crosses in front of it, is the most commonly used.
+    On this website, you can access predictions for transiting signals based on Kepler and TESS mission data, particularly Threshold Crossing Events (TCEs) retrieved from satellite observations.</p>
+
+    <!-- Features Section -->
+    <h2>Exoplanet Features Used for Predictions</h2>
+    <ul>
+        <li><strong>Period</strong>: Time taken for the exoplanet to complete one orbit around its star, measured in days.</li>
+        <li><strong>Time of Transit</strong>: The moment the exoplanet passes in front of its star, measured in BJD.</li>
+        <li><strong>Impact Parameter</strong>: Distance between the center of the star and the transit path of the exoplanet, scaled by the star’s radius (unitless).</li>
+        <li><strong>Duration</strong>: The length of time the exoplanet spends crossing the star, measured in hours.</li>
+        <li><strong>Depth</strong>: The fractional decrease in brightness during transit, measured in PPM or %.</li>
+        <li><strong>Equilibrium Temperature</strong>: Estimated surface temperature of the exoplanet in Kelvin.</li>
+        <li><strong>Star Effective Temperature</strong>: Surface temperature of the host star in Kelvin.</li>
+        <li><strong>Star Effective Gravity</strong>: Logarithm of the surface gravity of the star, typically measured in log(g).</li>
+        <li><strong>Star Radius</strong>: The radius of the star relative to the Sun's radius, measured in Solar Radii.</li>
+    </ul>
+
+    <!-- AI Model Section -->
+    <h2>AI Model Description</h2>
+    <p>The AI model uses XGBoost as the primary classifier. It processes the 9 features mentioned above and provides binary predictions indicating whether a transit is a confirmed exoplanet or a false positive, along with a confidence percentage.</p>
+
+    <!-- CSV Upload Section -->
+    <h2>Upload CSV File for Predictions</h2>
+    <p><strong>File Upload Criteria:</strong> The file must be in CSV format and contain the 9 features listed above. It must match the following column headers:</p>
+    <ul>
+        <li>Period: <code>&lt;tce_period&gt;</code> / <code>&lt;koi_period&gt;</code></li>
+        <li>Time of Transit: <code>&lt;tce_time0&gt;</code> / <code>&lt;koi_time0bk&gt;</code></li>
+        <li>Impact Parameter: <code>&lt;tce_impact&gt;</code> / <code>&lt;koi_impact&gt;</code></li>
+        <li>Duration: <code>&lt;tce_duration&gt;</code> / <code>&lt;koi_duration&gt;</code></li>
+        <li>Depth: <code>&lt;tce_depth&gt;</code> / <code>&lt;koi_depth&gt;</code></li>
+        <li>Equilibrium Temperature: <code>&lt;tce_eqt&gt;</code> / <code>&lt;koi_teq&gt;</code></li>
+        <li>Star Effective Temperature: <code>&lt;tce_steff&gt;</code> / <code>&lt;koi_steff&gt;</code></li>
+        <li>Star Effective Gravity: <code>&lt;tce_slogg&gt;</code> / <code>&lt;koi_slogg&gt;</code></li>
+        <li>Star Radius: <code>&lt;tce_sradius&gt;</code> / <code>&lt;koi_srad&gt;</code></li>
+    </ul>
+
+    <!-- CSV Upload Section -->
+    <h2>Upload CSV File for Predictions</h2>
+    <form id="upload-form">
+        <label class="file-input" for="csv-file">
+            <i class="fas fa-upload icon"></i>Choose a CSV File
+        </label>
+        <input type="file" id="csv-file" accept=".csv" required>
+        <button type="submit"><i class="fas fa-paper-plane icon"></i>Submit</button>
+    </form>
+
+    <!-- Loading Spinner -->
+    <div class="loading">
+        <div class="spinner"></div>
+        <p>Processing your file...</p>
+    </div>
+
+    <!-- Display First 5 Rows of Uploaded CSV -->
+    <h3>Preview of Uploaded CSV (First 5 Rows):</h3>
+    <table id="csv-preview" border="1"></table>
+
+    <!-- Display First 5 Rows of Response CSV -->
+    <h3>Preview of Response CSV (First 5 Rows):</h3>
+    <table id="response-preview" border="1"></table>
+
+    <!-- Download Link for Response CSV -->
+    <button id="download-response" class="hidden"><i class="fas fa-download icon"></i>Download Response CSV</button>
+
+    <p id="result"></p>
+
+    <script>
+        function displayCSVPreview(csvData, tableId) {
+            const table = document.getElementById(tableId);
+            table.innerHTML = '';
+            const rows = csvData.slice(0, 5);
+            rows.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                row.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.textContent = cell;
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+        }
+
+        document.getElementById('csv-file').onchange = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                Papa.parse(file, {
+                    complete: function(results) {
+                        displayCSVPreview(results.data, 'csv-preview');
+                    }
+                });
+            }
+        };
+
+        document.getElementById('upload-form').onsubmit = async (event) => {
+            event.preventDefault();
+            document.querySelector('.loading').style.display = 'block';
+
+            const fileInput = document.getElementById('csv-file');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const postResponse = await fetch('/features/predict', {
+                method: 'POST',
+                body: formData
+            });
+
+            document.querySelector('.loading').style.display = 'none';
+
+            if (postResponse.ok) {
+                const blob = await postResponse.blob();
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const csvText = event.target.result;
+                    Papa.parse(csvText, {
+                        complete: function(results) {
+                            displayCSVPreview(results.data, 'response-preview');
+                        }
+                    });
+                };
+                reader.readAsText(blob);
+
+                const url = window.URL.createObjectURL(blob);
+                const downloadButton = document.getElementById('download-response');
+                downloadButton.classList.remove('hidden');
+                downloadButton.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'predictions.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                };
+            } else {
+                document.getElementById('result').textContent = 'Error uploading file';
+            }
+        }
+    </script>
+</body>
+</html>
