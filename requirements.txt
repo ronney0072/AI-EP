@@ -5,4 +5,5 @@ jinja2
 numpy
 pandas
 pathlib
+xgboost
 -e .
